@@ -4,7 +4,7 @@
 
 # OKO-1 — open-source face-tracking robot for any webcam
 
-**OKO-1** is a 3D-printable pan/tilt turret that keeps **any webcam** locked on your face. A $7 ESP32-CAM finds your face on-chip, a second ESP32 drives two MG90S servos, and your own webcam just rides on top. No Wi-Fi, no cloud, no app. About **$24 in parts** (≈976 ₴ in Ukraine).
+**OKO-1** is a 3D-printable pan/tilt turret that keeps **any webcam** locked on your face. A $7 ESP32-CAM finds your face on-chip, a second ESP32 drives two MG90S servos, and your own webcam just rides on top. No Wi-Fi, no cloud, no app. About **$24 in parts**.
 
 *“Oko” means “eye” in Ukrainian.* First device by **[SDTech](https://sdtech.page)**, designed by [Serhii Dovhyi](https://sdtech.page/about/) with AI as a co-engineer.
 
@@ -37,17 +37,17 @@ Your webcam ──USB──► laptop   (untouched, works in Zoom / Meet / OBS /
 
 ## Parts
 
-| Part | Qty | ≈ ₴ | ≈ $ |
-|---|---:|---:|---:|
-| ESP32 DevKit (ESP32-WROOM-32) | 1 | 245 | 6 |
-| ESP32-CAM AI-Thinker + OV2640 | 1 | 281 | 7 |
-| MG90S metal-gear micro servo | 2 | 198 | 5.18 |
-| Dupont jumpers 20 cm (F-F + M-F) | 1 set | 150 | 3 |
-| WAGO 221-413 lever connector | 1 | 22 | 0.6 |
-| PETG filament | 134 g | 80 | 2 |
-| Screws M2.5-M3 x 8-10 mm | 4 | | |
+| Part | Qty | ≈ $ |
+|---|---:|---:|
+| ESP32 DevKit (ESP32-WROOM-32) | 1 | 6 |
+| ESP32-CAM AI-Thinker + OV2640 | 1 | 7 |
+| MG90S metal-gear micro servo | 2 | 5.18 |
+| Dupont jumpers 20 cm (F-F + M-F) | 1 set | 3 |
+| WAGO 221-413 lever connector | 1 | 0.6 |
+| PETG filament | 134 g | 2 |
+| Screws M2.5-M3 x 8-10 mm | 4 | |
 
-Prices checked 17 Nov 2026 (Ukrainian marketplaces / typical global listings). Sources are linked on [sdtech.page](https://sdtech.page/#bom).
+Typical global prices, checked 17 Nov 2026. Sources are linked on [sdtech.page](https://sdtech.page/#bom).
 
 ## Repository
 

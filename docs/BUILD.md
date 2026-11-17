@@ -2,19 +2,19 @@
 
 > The same guide lives at https://sdtech.page/oko/build/ with pictures and copy buttons.
 
-One evening, no soldering, about 976 ₴ in Ukraine or $24 worldwide in parts (prices checked 17 Nov 2026), plus a PETG-capable 3D printer and the webcam you already own.
+One evening, no soldering, about $24 in parts (prices checked 17 Nov 2026), plus a PETG-capable 3D printer and the webcam you already own.
 
 ## 0. Parts
 
-| Part | Qty | ₴ (Ukraine) | $ (global) | Note |
-|---|---|---|---|---|
-| ESP32 DevKit (ESP32-WROOM-32) | 1 | 245 | 6.00 | Main board: servo control and USB power |
-| ESP32-CAM AI-Thinker + OV2640 | 1 | 281 | 7.00 | Tracking eye: on-device face detection |
-| MG90S metal-gear micro servo | 2 | 198 | 5.18 | Pan and tilt |
-| Dupont jumpers 20 cm (F-F + M-F) | 1 | 150 | 3.00 | 4 to the camera, 2 per servo |
-| WAGO 221-413 lever connector | 1 | 22 | 0.60 | Splits USB 5 V to both servos |
-| PETG filament, 134 g of a 1 kg spool | 1 | 80 | 2.00 | Whole kit, one plate, no supports |
-| Screws M2.5-M3 x 8-10 mm | 4 | - | - | Plus the screws from the servo bags |
+| Part | Qty | Price, $ | Note |
+|---|---|---|---|
+| ESP32 DevKit (ESP32-WROOM-32) | 1 | 6.00 | Main board: servo control and USB power |
+| ESP32-CAM AI-Thinker + OV2640 | 1 | 7.00 | Tracking eye: on-device face detection |
+| MG90S metal-gear micro servo | 2 | 5.18 | Pan and tilt |
+| Dupont jumpers 20 cm (F-F + M-F) | 1 | 3.00 | 4 to the camera, 2 per servo |
+| WAGO 221-413 lever connector | 1 | 0.60 | Splits USB 5 V to both servos |
+| PETG filament, 134 g of a 1 kg spool | 1 | 2.00 | Whole kit, one plate, no supports |
+| Screws M2.5-M3 x 8-10 mm | 4 | - | Plus the screws from the servo bags |
 
 Any ESP32-WROOM-32 DevKit works (developed on a keyestudio ESP32). Use an AI-Thinker ESP32-CAM with OV2640; working PSRAM gives 320x240 tracking, without it the camera falls back to 160x120. Recommended: a 470-1000 µF capacitor across 5 V and GND if your laptop's USB port sags when the servos move.
 
