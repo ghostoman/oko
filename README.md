@@ -35,6 +35,12 @@ OV2640 ──► ESP32-CAM ──UART 921600──► ESP32 main ──PWM──
 Your webcam ──USB──► laptop   (untouched, works in Zoom / Meet / OBS / Teams)
 ```
 
+## Read more
+
+- [How to make any webcam follow your face](https://sdtech.page/oko/how-it-works/): gimbal webcams vs software auto-framing vs a motorized mount
+- [ESP32-CAM face tracking with servos, explained](https://sdtech.page/oko/esp32-cam-face-tracking/): camera fast path, UART protocol, latency-compensated control law, smoothing, power gotchas
+- [Full build guide with pictures](https://sdtech.page/oko/build/)
+
 ## Parts
 
 | Part | Qty | ≈ $ |
