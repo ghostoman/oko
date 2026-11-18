@@ -4,7 +4,7 @@
 
 # OKO-1 — open-source face-tracking robot for any webcam
 
-**OKO-1** is a 3D-printable pan/tilt turret that keeps **any webcam** locked on your face. A $7 ESP32-CAM finds your face on-chip, a second ESP32 drives two MG90S servos, and your own webcam just rides on top. No Wi-Fi, no cloud, no app. About **$24 in parts**.
+**OKO-1** is a 3D-printable pan/tilt turret that keeps **any webcam** locked on your face. A $6 ESP32-CAM finds your face on-chip, a second ESP32 drives two MG90S servos, and your own webcam just rides on top. No Wi-Fi, no cloud, no app. About **$22 in parts** (before shipping).
 
 *“Oko” means “eye” in Ukrainian.* First device by **[SDTech](https://sdtech.page)**, designed by [Serhii Dovhyi](https://sdtech.page/about/) with AI as a co-engineer.
 
@@ -43,17 +43,17 @@ Your webcam ──USB──► laptop   (untouched, works in Zoom / Meet / OBS /
 
 ## Parts
 
-| Part | Qty | ≈ $ |
-|---|---:|---:|
-| ESP32 DevKit (ESP32-WROOM-32) | 1 | 6 |
-| ESP32-CAM AI-Thinker + OV2640 | 1 | 7 |
-| MG90S metal-gear micro servo | 2 | 5.18 |
-| Dupont jumpers 20 cm (F-F + M-F) | 1 set | 3 |
-| WAGO 221-413 lever connector | 1 | 0.6 |
-| PETG filament | 134 g | 2 |
-| Screws M2.5-M3 x 8-10 mm | 4 | |
+| Part | Qty | ≈ $ | Listing |
+|---|---:|---:|---|
+| ESP32 DevKit (ESP32-WROOM-32, CP2102) | 1 | 4.40 | [AliExpress](https://www.aliexpress.com/item/32800930387.html) |
+| ESP32-CAM AI-Thinker + OV2640 | 1 | 6.40 | [AliExpress](https://www.aliexpress.com/item/4000844206042.html) |
+| MG90S metal-gear micro servo (pack of 2) | 2 | 6.15 | [AliExpress](https://www.aliexpress.com/item/1005008626768357.html) |
+| Dupont jumpers 20 cm (F-F + M-F, 40 each) | 1 set | 3.20 | [AliExpress](https://www.aliexpress.com/item/1005009071621102.html) |
+| WAGO-type 3-way lever connector (pack of 10, one used) | 1 | 0.20 | [AliExpress](https://www.aliexpress.com/item/1005006963063019.html) |
+| PETG filament | 134 g | 2.00 | any 1 kg spool |
+| Screws M2.5-M3 x 8-10 mm | 4 | | parts box |
 
-Typical global prices, checked 17 Nov 2026. Sources are linked on [sdtech.page](https://sdtech.page/#bom).
+Real AliExpress listings checked 18 Nov 2026, item prices before shipping (shipping depends on your country). Total ≈ $22. Any seller works.
 
 ## Repository
 

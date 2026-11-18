@@ -2,17 +2,17 @@
 
 > The same guide lives at https://sdtech.page/oko/build/ with pictures and copy buttons.
 
-One evening, no soldering, about $24 in parts (prices checked 17 Nov 2026), plus a PETG-capable 3D printer and the webcam you already own.
+One evening, no soldering, about $22 in parts (AliExpress item prices before shipping, checked 18 Nov 2026), plus a PETG-capable 3D printer and the webcam you already own.
 
 ## 0. Parts
 
 | Part | Qty | Price, $ | Note |
 |---|---|---|---|
-| ESP32 DevKit (ESP32-WROOM-32) | 1 | 6.00 | Main board: servo control and USB power |
-| ESP32-CAM AI-Thinker + OV2640 | 1 | 7.00 | Tracking eye: on-device face detection |
-| MG90S metal-gear micro servo | 2 | 5.18 | Pan and tilt |
-| Dupont jumpers 20 cm (F-F + M-F) | 1 | 3.00 | 4 to the camera, 2 per servo |
-| WAGO 221-413 lever connector | 1 | 0.60 | Splits USB 5 V to both servos |
+| ESP32 DevKit (ESP32-WROOM-32, CP2102) | 1 | 4.40 | Main board: servo control and USB power |
+| ESP32-CAM AI-Thinker + OV2640 | 1 | 6.40 | Tracking eye: on-device face detection |
+| MG90S metal-gear micro servo (pack of 2) | 2 | 6.15 | Pan and tilt |
+| Dupont jumpers 20 cm (F-F + M-F, 40 each) | 1 | 3.20 | 4 to the camera, 2 per servo |
+| WAGO-type 3-way lever connector | 1 | 0.20 | Splits USB 5 V to both servos (sold in packs of 10, ≈$1.9) |
 | PETG filament, 134 g of a 1 kg spool | 1 | 2.00 | Whole kit, one plate, no supports |
 | Screws M2.5-M3 x 8-10 mm | 4 | - | Plus the screws from the servo bags |
 
@@ -42,7 +42,7 @@ Files: `hardware/print/` (Bambu Studio projects, sliced for P1S / X1C) or `hardw
 | Camera mask (`shroud`) | Face down | Front face gets the bed texture and the engraved reticle. |
 | Tilt servo cap (`servo_cap`) | Bottom down | Press fit, optional. Wire slots on both ends. |
 | Desk stand (optional) (`desk_foot`) | Flat | Turns the laptop mount into a desk unit. |
-| Shims 0.2 / 0.4 / 0.6 mm (`shims`) | Flat | Only if the yoke has vertical play. |
+| Shims 0.2 / 0.4 / 0.6 mm (`shim_02 / shim_04 / shim_06`) | Flat | Only if the yoke has vertical play. |
 
 Neon: press any 1.75 mm filament into the 1.8 x 1.4 mm grooves. The print stays single colour.
 
@@ -134,6 +134,12 @@ Reference build settings: kp 0.85, dead 1.5°, speed 180°/s, lag 120 ms, smooth
 **Does it work with any webcam?**
 Yes. OKO-1 does not use your webcam for tracking at all. A separate ESP32-CAM on the head finds your face, and your webcam just rides on top and stays plugged into the laptop as usual. Anything with a monitor-style clip fits the head rib; it was developed with a Logitech Brio 100.
 
+**How is OKO-1 different from a gimbal webcam like OBSBOT or Insta360 Link?**
+Those are complete cameras with motors and tracking built in, from about $99 to $199. OKO-1 is a motorized mount that adds the same idea to the webcam you already own, for about $22 in parts. It is fully open source, so you can print, repair and modify every piece.
+
+**Does it work on Windows, macOS and Linux?**
+Yes. Your computer only sees your own webcam, exactly as before. OKO-1 takes 5 V from any USB port or phone charger and needs no driver, app or account to track.
+
 **Is my video sent anywhere?**
 No. Face detection runs on the ESP32-CAM chip itself. Wi-Fi and Bluetooth are never started in the firmware, the tracking camera only sends face coordinates over two wires to the main board, and your webcam picture never touches OKO-1.
 
@@ -141,7 +147,13 @@ No. Face detection runs on the ESP32-CAM chip itself. Wi-Fi and Bluetooth are ne
 About 7.2 face detections per second on the ESP32-CAM, measured on hardware. Between detections the servos move with critically damped easing, so motion stays smooth instead of jerky.
 
 **What do I need to build one?**
-A 3D printer (PETG), an ESP32 DevKit, an ESP32-CAM with OV2640, two MG90S servos, a few Dupont wires and a WAGO connector. About $21-24 in parts. No soldering and no separate programmer.
+A 3D printer (PETG), an ESP32 DevKit, an ESP32-CAM with OV2640, two MG90S servos, a few Dupont wires and a WAGO connector. About $22 in parts. No soldering and no separate programmer.
+
+**I do not have a 3D printer. Can I still build one?**
+Yes. Send the STL files to any online 3D printing service or a local makerspace and ask for PETG. It is one small plate of about 134 g, so it is a cheap job. Everything else is off-the-shelf electronics.
+
+**Is it noisy?**
+MG90S micro servos make a soft whir while the head moves and stay silent when you sit still, thanks to the 2° dead zone.
 
 **Can I use it on a desk instead of a laptop?**
 Yes. Print the optional desk stand and slide the housing into it.
