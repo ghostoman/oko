@@ -8,7 +8,7 @@
 
 *“Oko” means “eye” in Ukrainian.* First device by **[SDTech](https://sdtech.page)**, designed by [Serhii Dovhyi](https://sdtech.page/about/) with AI as a co-engineer.
 
-**Website, 3D tour and downloads → [sdtech.page](https://sdtech.page)** · **Build guide → [docs/BUILD.md](docs/BUILD.md)** · **Build it with Claude → [docs/CLAUDE_PROMPT.md](docs/CLAUDE_PROMPT.md)**
+**Website, 3D tour and downloads → [sdtech.page](https://sdtech.page)** · **Print it on MakerWorld → [ready Bambu Studio profile](https://makerworld.com/en/models/3647128-oko-1-face-tracking-webcam-turret-esp32-cam)** · **Build guide → [docs/BUILD.md](docs/BUILD.md)** · **Build it with Claude → [docs/CLAUDE_PROMPT.md](docs/CLAUDE_PROMPT.md)**
 
 | | |
 |---|---|
