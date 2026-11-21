@@ -10,6 +10,10 @@
 // 2.5: smooth moves. The servos follow the target like a critically damped spring ("set smooth <ms>"): a move starts gently,
 // slows down gently and never overshoots. "set aimx/aimy <deg>" keeps the face off the middle of the ESP32-CAM picture,
 // to centre it in the webcam that sits next to it.
+// 2.6: runs for hours. A health watchdog restarts the camera sensor when its picture stops (no reports, frame timeouts)
+// or when no face has been seen for 40 s (a stuck exposure or a torn DMA picture looks exactly like "nobody there").
+// The automatic axis flip only judges a correction after the servo has arrived, needs 6 strikes, and is written to
+// flash only after the new direction has proven itself. A task watchdog reboots the board if the loop ever hangs.
 // "bridge" turns the board into a plain USB <-> camera serial link (115200) for flashing the ESP32-CAM, see flash_cam_bridge.ps1.
 // USB serial 921600: commands + telemetry for tools\ft_monitor.py.   Build: fqbn esp32:esp32:esp32
 #include <Arduino.h>
@@ -17,8 +21,9 @@
 #include "soc/soc.h"
 #include "soc/rtc_cntl_reg.h"
 #include "config.h"
+#include "esp_task_wdt.h"
 
-#define FW_VERSION "2.5"
+#define FW_VERSION "2.6"
 #define CH_PAN  0
 #define CH_TILT 2
 struct Cfg {
@@ -37,6 +42,8 @@ volatile float histPan[HIST], histTilt[HIST]; volatile uint32_t histN = 0;
 bool tracking = true, streamOn = false;
 uint32_t lastCam = 0, lastSeen = 0, lastStat = 0, camFrames = 0, camMs = 0;
 float fps = 0, nx = 0, ny = 0, nw = 0, score = 0;     // face, normalised 0..1
+// health watchdog
+uint32_t bootMs = 0, lastHeal = 0, heals = 0, flips = 0, timeouts = 0, lastTimeout = 0; int camXclk = 20; bool flipPending = false; int flipGood = 0;
 int divPan = 0, divTilt = 0; float prevEx = 0, prevEy = 0; bool prevStepPan = false, prevStepTilt = false;
 
 void cfgDefaults() {
@@ -106,8 +113,8 @@ void control(float cx, float cy, int W, int H, uint32_t ms) {
   // self-check of the direction signs: if the error keeps growing although the servo has arrived, flip that axis
   if (prevStepPan && fabsf(tgtPan - curPan) < 3.0f) { if (fabsf(ex) > fabsf(prevEx) + 1.5f && ex * prevEx > 0) divPan++; else divPan = max(0, divPan - 1); }
   if (prevStepTilt && fabsf(tgtTilt - curTilt) < 3.0f) { if (fabsf(ey) > fabsf(prevEy) + 1.5f && ey * prevEy > 0) divTilt++; else divTilt = max(0, divTilt - 1); }
-  if (divPan >= 5) { cfg.panDir = -cfg.panDir; divPan = 0; estOk = false; cfgStore(); Serial.println("pan direction flipped automatically"); }
-  if (divTilt >= 5) { cfg.tiltDir = -cfg.tiltDir; divTilt = 0; estOk = false; cfgStore(); Serial.println("tilt direction flipped automatically"); }
+  if (divPan >= 6) { cfg.panDir = -cfg.panDir; divPan = 0; estOk = false; flips++; flipPending = true; flipGood = 0; Serial.println("# pan direction flipped automatically (not saved yet)"); }
+  if (divTilt >= 6) { cfg.tiltDir = -cfg.tiltDir; divTilt = 0; estOk = false; flips++; flipPending = true; flipGood = 0; Serial.println("# tilt direction flipped automatically (not saved yet)"); }
   // where the servos stood when this picture was taken
   uint32_t lat = ms + cfg.lag, back = min((uint32_t)(HIST - 1), lat / 10), hn = histN;
   float pan0 = hn > back ? histPan[(hn - 1 - back) & (HIST - 1)] : curPan, tilt0 = hn > back ? histTilt[(hn - 1 - back) & (HIST - 1)] : curTilt;
@@ -134,11 +141,15 @@ void controlPlain(float cx, float cy, int W, int H, uint32_t ms) {
   float dpp = cfg.fov / max(W, H);                          // degrees per pixel
   float ex = (cx - W * 0.5f) * dpp - cfg.aimX;              // + = face is to the right in the picture
   float ey = (H * 0.5f - cy) * dpp - cfg.aimY;              // + = face is above the centre
-  // self-check of the direction signs: if corrections keep making the error bigger, flip that axis
-  if (prevStepPan) { if (fabsf(ex) > fabsf(prevEx) + 1.5f && ex * prevEx > 0) divPan++; else divPan = max(0, divPan - 1); }
-  if (prevStepTilt) { if (fabsf(ey) > fabsf(prevEy) + 1.5f && ey * prevEy > 0) divTilt++; else divTilt = max(0, divTilt - 1); }
-  if (divPan >= 5) { cfg.panDir = -cfg.panDir; divPan = 0; cfgStore(); Serial.println("pan direction flipped automatically"); }
-  if (divTilt >= 5) { cfg.tiltDir = -cfg.tiltDir; divTilt = 0; cfgStore(); Serial.println("tilt direction flipped automatically"); }
+  // self-check of the direction signs: if corrections keep making the error bigger, flip that axis.
+  // 2.6: a correction is only judged once the servo has arrived (a fast-moving face is not a wrong sign), 6 strikes are
+  // needed, and the flip stays in RAM until 15 good corrections prove it; only then it is saved.
+  bool arrivedP = fabsf(tgtPan - curPan) < 1.5f, arrivedT = fabsf(tgtTilt - curTilt) < 1.5f;
+  if (prevStepPan && arrivedP) { if (fabsf(ex) > fabsf(prevEx) + 1.5f && ex * prevEx > 0) divPan++; else divPan = max(0, divPan - 1); }
+  if (prevStepTilt && arrivedT) { if (fabsf(ey) > fabsf(prevEy) + 1.5f && ey * prevEy > 0) divTilt++; else divTilt = max(0, divTilt - 1); }
+  if (divPan >= 6) { cfg.panDir = -cfg.panDir; divPan = 0; flips++; flipPending = true; flipGood = 0; Serial.println("# pan direction flipped automatically (not saved yet)"); }
+  if (divTilt >= 6) { cfg.tiltDir = -cfg.tiltDir; divTilt = 0; flips++; flipPending = true; flipGood = 0; Serial.println("# tilt direction flipped automatically (not saved yet)"); }
+  if (flipPending && (prevStepPan || prevStepTilt) && fabsf(ex) + fabsf(ey) < fabsf(prevEx) + fabsf(prevEy) && ++flipGood >= 15) { flipPending = false; cfgStore(); Serial.println("# new direction confirmed and saved"); }
   // where the servos stood when this picture was taken
   uint32_t back = min((uint32_t)(HIST - 1), (ms + cfg.lag) / 10), hn = histN;
   float pan0 = hn > back ? histPan[(hn - 1 - back) & (HIST - 1)] : curPan, tilt0 = hn > back ? histTilt[(hn - 1 - back) & (HIST - 1)] : curTilt;
@@ -154,8 +165,8 @@ void controlPlain(float cx, float cy, int W, int H, uint32_t ms) {
 }
 
 void sendStatus() {
-  Serial.printf("#S {\"st\":\"%s\",\"n\":%d,\"x\":%.3f,\"y\":%.3f,\"w\":%.3f,\"sc\":%.2f,\"pan\":%.1f,\"tilt\":%.1f,\"fps\":%.1f,\"ms\":%u,\"heap\":%u,\"pd\":%d,\"td\":%d,\"vp\":%.1f,\"vt\":%.1f}\n",
-                ST_NAME[state], state == ST_LOCK ? 1 : 0, nx, ny, nw, score, (float)curPan, (float)curTilt, fps, camMs, ESP.getFreeHeap(), cfg.panDir, cfg.tiltDir, estOk ? velPan : 0.0f, estOk ? velTilt : 0.0f);
+  Serial.printf("#S {\"st\":\"%s\",\"n\":%d,\"x\":%.3f,\"y\":%.3f,\"w\":%.3f,\"sc\":%.2f,\"pan\":%.1f,\"tilt\":%.1f,\"fps\":%.1f,\"ms\":%u,\"heap\":%u,\"pd\":%d,\"td\":%d,\"vp\":%.1f,\"vt\":%.1f,\"up\":%u,\"heal\":%u,\"to\":%u,\"flips\":%u}\n",
+                ST_NAME[state], state == ST_LOCK ? 1 : 0, nx, ny, nw, score, (float)curPan, (float)curTilt, fps, camMs, ESP.getFreeHeap(), cfg.panDir, cfg.tiltDir, estOk ? velPan : 0.0f, estOk ? velTilt : 0.0f, (millis() - bootMs) / 1000, heals, timeouts, flips);
 }
 void show() {
   Serial.printf("panDir %d tiltDir %d panTrim %d tiltTrim %d\nkp %.2f dead %.1f speed %.0f usdeg %.2f fov %.0f panlim %.0f tiltmin %.0f tiltmax %.0f aimx %.1f aimy %.1f home %u lag %u pred %.2f lead %u smooth %u\n",
@@ -223,6 +234,9 @@ void camLine(char *l) {
     if (tracking) state = ST_SEARCH;
   } else if (l[0] == '#') {
     Serial.println(l);
+    const char *xk = strstr(l, " xclk ");
+    if (strncmp(l, "# cam ", 6) == 0 && xk) camXclk = constrain(atoi(xk + 6), 5, 24);
+    if (strstr(l, "frame timeout")) { timeouts++; lastTimeout = now; }
     int w, h, n;
     if (sscanf(l, "#IMG %d %d %d", &w, &h, &n) == 3 && n > 0 && n <= 80000) {      // picture: pass the raw bytes straight to the PC
       uint32_t t0 = millis(); static uint8_t buf[512];
@@ -230,6 +244,20 @@ void camLine(char *l) {
       Serial.println(); sendStatus();
     }
   }
+}
+// Restart the camera sensor (deinit + init on the ESP32-CAM) without touching its settings
+void healCam(const char *why) {
+  lastHeal = millis(); heals++;
+  Serial.printf("# health: restarting the camera sensor (%s), #%u\n", why, heals);
+  Cam.printf("xclk %d\n", camXclk);
+}
+void health(uint32_t now) {
+  if (now - bootMs < 8000 || now - lastHeal < 6000) return;
+  if (now - lastCam > 4000) { healCam("no reports"); return; }                                  // picture stopped
+  if (timeouts >= 3 && now - lastTimeout < 3000) { timeouts = 0; healCam("frame timeouts"); return; }
+  // nobody seen for 40 s while tracking: a frozen exposure or a torn picture looks the same as an empty room,
+  // so give the sensor a fresh start every 40 s (costs about half a second of picture)
+  if (tracking && now - lastSeen > 40000 && now - lastHeal > 40000) healCam("no face for 40 s");
 }
 void pollCam() {
   static char line[200]; static int n = 0;
@@ -264,6 +292,7 @@ void bridgeRun() {
 void setup() {
   WRITE_PERI_REG(RTC_CNTL_BROWN_OUT_REG, 0);            // servos on USB power dip the 5 V rail: do not reset on it
   Serial.begin(BAUD); delay(200);
+  bootMs = millis();
   Serial.println("\nFaceTracker main " FW_VERSION);
   prefs.begin("ft", false);
   if (prefs.getBool("bridge", false)) bridgeRun();      // never returns
@@ -282,6 +311,7 @@ void setup() {
   delay(350);
   xTaskCreatePinnedToCore(servoTask, "servo", 3072, nullptr, 3, nullptr, 0);
   lastSeen = millis(); help(); show();
+  esp_task_wdt_init(20, true); esp_task_wdt_add(NULL);   // a hung loop reboots the board after 20 s
 }
 void loop() {
   pollUsb(); pollCam();
@@ -295,6 +325,8 @@ void loop() {
     th = now;
     if (fabsf(tgtPan) > 1 || fabsf(tgtTilt) > 1) setTarget(tgtPan * 0.92f, tgtTilt * 0.92f); else setTarget(0, 0);
   }
+  health(now);
   steer();
+  esp_task_wdt_reset();
   delay(1);
 }
